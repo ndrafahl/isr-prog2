@@ -8,8 +8,11 @@
 #include <string>
 #include <fstream>
 #include <cstdlib>
+#include <iterator>
+#include <algorithm>
 
 void printFileCollection (std::vector <std::string> fCol);
+std::string removePunc (std::string word);
 
 int main(int argc, char * argv[]) {
 
@@ -41,6 +44,7 @@ int main(int argc, char * argv[]) {
         // This is to prevent duplicate words from being stored on initial
         // read.
         while (myFile >> word) {
+            word = removePunc(word);
             wordCollection.insert(word);
         }
 
@@ -76,6 +80,8 @@ int main(int argc, char * argv[]) {
 
     printFileCollection(fileCollection);
 
+    std::string testword = removePunc ("Hello");
+
     return 0;
 }
 
@@ -88,3 +94,36 @@ void printFileCollection (std::vector< std::string > fCol) {
         std::cout << i + 1 << ". " << fCol.at(i) << std::endl;
     }
 }
+
+std::string removePunc (std::string word) {
+    //bool check = true;
+
+    int iter = 0;
+
+    std::cout << "word is : " << word << " (size: " << word.size() << ")" << std::endl;
+    /*for(char c : word) {
+        //std::cout << c << std::endl;
+        if(c == '-') {
+            word.erase(iter);
+            //word.resize(word.size() - 1);
+        }
+        iter++;
+    }*/
+
+    for(int i = 0; i < word.size(); ++i) {
+        char c = word.at(i);
+
+        if(c == '!') {
+            word.erase(i);
+            std::cout << "Removing letter at index " << i << std::endl;
+            std::cout << "New size is : " << word.size() << std::endl;
+        } else if (c == '-') {
+            word.erase(i);
+        }
+    }
+    //check = false;
+
+    std::cout << "returning word is : " << word << std::endl;
+    return word;
+}
+
