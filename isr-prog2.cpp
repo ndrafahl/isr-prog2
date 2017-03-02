@@ -1,3 +1,7 @@
+//Author:     Nick Drafahl
+//Class:      Information Storage and Retrieval
+//Usage:      ./isr-prog2 <file1 [file2] ...>
+
 #include <set>
 #include <vector>
 #include <iostream>
@@ -5,11 +9,14 @@
 #include <fstream>
 #include <cstdlib>
 
+void printFileCollection (std::vector <std::string> fCol);
+
 int main(int argc, char * argv[]) {
 
     std::vector< std::set<std::string> > docCollection;
     std::set<std::string> wordCollection;
     std::set<std::string> dictionary;
+    std::vector< std::string > fileCollection;
 
     std::ifstream myFile;
 
@@ -19,6 +26,7 @@ int main(int argc, char * argv[]) {
     }
 
     for (int i = 1; i < argc; ++i) {
+        fileCollection.push_back(argv[i]);
         myFile.open(argv[i]);
 
         if (!myFile.is_open()) {
@@ -66,6 +74,17 @@ int main(int argc, char * argv[]) {
             std::cout << word << std::endl;
     }
 
-    return 0;
+    printFileCollection(fileCollection);
 
+    return 0;
+}
+
+// Function takes in a vector containing all of the file names and prints them
+// to the console as the Legend
+void printFileCollection (std::vector< std::string > fCol) {
+
+    std::cout << "Legend:" << std::endl;
+    for (int i = 0; i < fCol.size(); ++i) {
+        std::cout << i + 1 << ". " << fCol.at(i) << std::endl;
+    }
 }
