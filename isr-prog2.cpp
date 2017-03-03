@@ -25,7 +25,10 @@ struct token {
         uniDocList.insert(docNum);
     }
 
+    friend bool operator< (const token &left, const token &right);
+
     std::string getWord() { return sWord; };
+    std::set<int> getUniqueDocList() { return uniDocList; }
 };
 
 
@@ -34,12 +37,14 @@ std::string removePunc (std::string word);
 bool compTokensLess(const token & t1, const token & t2);
 bool compTokensLower(const token & t1, const std::string & t2);
 void printTokenVector(std::vector<token> tVector);
+void printIntegerSet(std::set<int> tSet);
 
 int main(int argc, char * argv[]) {
 
     // Variable Declarations
     std::vector<std::string> fileCollection;
     std::vector<token> tokenVec;
+    std::set<token> tokenSet;
 
     std::ifstream myFile;
 
@@ -65,7 +70,7 @@ int main(int argc, char * argv[]) {
 
         // Loop that pulls all words from a single file
         while (myFile >> word) {
-            std::cout << "new input word is: " << word << std::endl;
+            //std::cout << "new input word is: " << word << std::endl;
 
             // Create iterator to search through the words stored in the
             // tokens stored in our Vector
@@ -88,7 +93,7 @@ int main(int argc, char * argv[]) {
 
             // We should be able to use lower_bound because we're sorting the
             // Vector anytime we put in a new item.
-            if(iVec == tokenVec.size()) {
+            /*if(iVec == tokenVec.size()) {
                 //std::cout << "entered if statement\n";
                 std::cout << "Inserting token with word " << word << std::endl;
                 token temp = token(word);
@@ -102,8 +107,18 @@ int main(int argc, char * argv[]) {
                 //std::cout << "entered else statement\n";
                 int iVec = std::distance(tokenVec.begin(), b);
                 tokenVec.at(iVec).addDocNum(i+1);
-            }
+            }*/
+            auto c = tokenSet.find(word);
 
+            if(tokenSet.find(word) != tokenSet.end()) {
+                token temp = *c;
+                temp.addDocNum(i+1);
+                //printIntegerSet(temp.uniDocList);
+            } else {
+                token temp = token(word);
+                temp.addDocNum(i+1);
+                tokenSet.insert(temp);
+            }
             //wordCollection.insert(word);
         }
 
@@ -114,8 +129,15 @@ int main(int argc, char * argv[]) {
 
     printFileCollection(fileCollection);
 
-    for(int i = 0; i < tokenVec.size(); ++i) {
+    /*for(int i = 0; i < tokenVec.size(); ++i) {
         std::cout << tokenVec.at(i).sWord << std::endl;
+    }*/
+
+    std::set<token>::iterator iter;
+    for(iter = tokenSet.begin(); iter != tokenSet.end(); ++iter) {
+        token t = *iter;
+        std::cout << t.sWord << ": ";
+        printIntegerSet(t.uniDocList);
     }
 
     return 0;
@@ -183,3 +205,19 @@ void printTokenVector(std::vector<token> tVector) {
     }
     std::cout << "\n";
 }
+
+void printIntegerSet(std::set<int> tSet) {
+    std::set<int>::iterator iter;
+
+    std::cout << "size of (" << tSet.size() << ") ";
+    for(iter = tSet.begin(); iter != tSet.end(); ++iter) {
+        std::cout << *iter << " ";
+    }
+
+    std::cout << "\n";
+}
+
+bool operator< (const token &left, const token &right) {
+    return left.sWord < right.sWord;
+}
+
