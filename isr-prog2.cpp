@@ -11,32 +11,46 @@
 #include <iterator>
 #include <algorithm>
 
+// Custom structure that will store our unique tokens as well as the documents
+// that they are found in.
 struct token {
-    std::string sWord;
-    std::vector <int> docList;
+    std::string sWord;              // Token
+    std::vector <int> docList;      // Vector of all documents token is found in (dupes allowed)
+    std::set <int> uniDocList;      // Set of all documents token is found in (dupes not allowed)
 
     token(const std::string& x) : sWord(x) {}
+
+    void addDocNum(int docNum) {
+        docList.push_back(docNum);
+        uniDocList.insert(docNum);
+    }
+
+    std::string getWord() { return sWord; };
 };
 
 
 void printFileCollection (std::vector <std::string> fCol);
 std::string removePunc (std::string word);
-bool compTokens(const token & t1, const token & t2);
+bool compTokensLess(const token & t1, const token & t2);
+bool compTokensLower(const token & t1, const std::string & t2);
+void printTokenVector(std::vector<token> tVector);
 
 int main(int argc, char * argv[]) {
 
-    std::vector< std::set<std::string> > docCollection;
-    std::set<std::string> wordCollection;
-    std::set<std::string> dictionary;
+    // Variable Declarations
     std::vector<std::string> fileCollection;
+    std::vector<token> tokenVec;
 
     std::ifstream myFile;
 
+    // Print to CLI if the user didn't pass in any documents to parse
     if (argc <= 1) {
         std::cout << "Usage: This program requires at least one document to be parsed.\n";
         exit(0);
     }
 
+    // Primary loop that loops through all the documents passed in via command
+    // line
     for (int i = 1; i < argc; ++i) {
         fileCollection.push_back(argv[i]);
         myFile.open(argv[i]);
@@ -49,57 +63,59 @@ int main(int argc, char * argv[]) {
 
         std::string word;
 
-        // Read each word from the opened file and place it into a set.
-        // This is to prevent duplicate words from being stored on initial
-        // read.
+        // Loop that pulls all words from a single file
         while (myFile >> word) {
-            word = removePunc(word);
-            wordCollection.insert(word);
-        }
+            std::cout << "new input word is: " << word << std::endl;
 
-        // Push_back the created set into a vector to contain every document
-        // we open.
-        // Then clear the temporary set for next iteration.
-        docCollection.push_back(wordCollection);
-        wordCollection.clear();
+            // Create iterator to search through the words stored in the
+            // tokens stored in our Vector
+            //auto b = find_if(tokenVec.begin(), tokenVec.end(), [word](const token& temp) {return temp.sWord == word;});
+            auto b = std::lower_bound(tokenVec.begin(), tokenVec.end(), word, compTokensLower);
+            auto iVec = std::distance(tokenVec.begin(), b);
+
+            // If we've found a match, we just want to update the document
+            // lists for that word.
+            /*if(b != tokenVec.end()) {
+                auto iVec = std::distance(tokenVec.begin(), b);
+                tokenVec.at(iVec).addDocNum(i+1);
+            } else { // Otherwise, we need to create a new token and construct it with this document's number
+                token temp = token(word);
+                temp.addDocNum(i+1);
+                tokenVec.push_back(temp);
+                std::sort(tokenVec.begin(), tokenVec.end(), compTokensLess);
+                //printTokenVector(tokenVec);
+            } */
+
+            // We should be able to use lower_bound because we're sorting the
+            // Vector anytime we put in a new item.
+            if(iVec == tokenVec.size()) {
+                //std::cout << "entered if statement\n";
+                std::cout << "Inserting token with word " << word << std::endl;
+                token temp = token(word);
+                temp.addDocNum(i+1);
+                tokenVec.push_back(temp);
+                //std::cout << "tokenVec size is : " << tokenVec.size() << std::endl;
+                std::sort(tokenVec.begin(), tokenVec.end(), compTokensLess);
+                std::cout << "Sorted tokenVec\n";
+                printTokenVector(tokenVec);
+            } else {
+                //std::cout << "entered else statement\n";
+                int iVec = std::distance(tokenVec.begin(), b);
+                tokenVec.at(iVec).addDocNum(i+1);
+            }
+
+            //wordCollection.insert(word);
+        }
 
         myFile.close();
     }
 
-    // For each set we created from the documents, loop through them and
-    // insert them into a single set that will be our dictionary.
-    // This auto-sorts the dictionary alphabetically and removes duplicates.
-    for (int i = 0; i < docCollection.size(); ++i) {
-        wordCollection = docCollection.at(i);
-
-        for (std::set<std::string>::iterator iter = wordCollection.begin();
-             iter != wordCollection.end(); ++iter) {
-            std::string word = *iter;
-            dictionary.insert(word);
-        }
-    }
-
-    // For each item in the dictionary, loop through it and output it to the
-    // console
-    for (std::set<std::string>::iterator iter = dictionary.begin();
-         iter != dictionary.end(); ++iter) {
-            std::string word = *iter;
-            std::cout << word << std::endl;
-    }
+    std::cout << "Exited main loop.\n";
 
     printFileCollection(fileCollection);
 
-    std::string testword = removePunc ("Hello");
-
-    std::vector<token> tokenVec;
-    tokenVec.push_back(token("a"));
-    tokenVec.push_back(token("c"));
-    tokenVec.push_back(token("b"));
-
-    std::sort(tokenVec.begin(), tokenVec.end(), compTokens);
-
     for(int i = 0; i < tokenVec.size(); ++i) {
-        std::cout << tokenVec.at(i).sWord;
+        std::cout << tokenVec.at(i).sWord << std::endl;
     }
 
     return 0;
@@ -115,6 +131,7 @@ void printFileCollection (std::vector< std::string > fCol) {
     }
 }
 
+// Function that takes in a word and removes all punctuation
 std::string removePunc (std::string word) {
     //bool check = true;
 
@@ -147,8 +164,22 @@ std::string removePunc (std::string word) {
     return word;
 }
 
-bool compTokens(const token & t1, const token & t2) {
+// Function used to sort the vector of tokens alphabetically
+bool compTokensLess(const token & t1, const token & t2) {
     return t1.sWord < t2.sWord;
-
 }
 
+bool compTokensLower(const token & t1, const std::string & t2) {
+    std::cout << "comparing token word " << t1.sWord << "<  input word " << t2;
+    if(t1.sWord < t2) { std::cout << " (true)\n";}
+    else {std::cout << " (false)\n";}
+    return t1.sWord < t2;
+}
+
+// Function to print the words stored currently in a vector of tokens
+void printTokenVector(std::vector<token> tVector) {
+    for(int i = 0; i < tVector.size(); ++i) {
+        std::cout << tVector.at(i).sWord << std::endl;
+    }
+    std::cout << "\n";
+}
