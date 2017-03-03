@@ -11,15 +11,24 @@
 #include <iterator>
 #include <algorithm>
 
+struct token {
+    std::string sWord;
+    std::vector <int> docList;
+
+    token(const std::string& x) : sWord(x) {}
+};
+
+
 void printFileCollection (std::vector <std::string> fCol);
 std::string removePunc (std::string word);
+bool compTokens(const token & t1, const token & t2);
 
 int main(int argc, char * argv[]) {
 
     std::vector< std::set<std::string> > docCollection;
     std::set<std::string> wordCollection;
     std::set<std::string> dictionary;
-    std::vector< std::string > fileCollection;
+    std::vector<std::string> fileCollection;
 
     std::ifstream myFile;
 
@@ -82,6 +91,17 @@ int main(int argc, char * argv[]) {
 
     std::string testword = removePunc ("Hello");
 
+    std::vector<token> tokenVec;
+    tokenVec.push_back(token("a"));
+    tokenVec.push_back(token("c"));
+    tokenVec.push_back(token("b"));
+
+    std::sort(tokenVec.begin(), tokenVec.end(), compTokens);
+
+    for(int i = 0; i < tokenVec.size(); ++i) {
+        std::cout << tokenVec.at(i).sWord;
+    }
+
     return 0;
 }
 
@@ -125,5 +145,10 @@ std::string removePunc (std::string word) {
 
     std::cout << "returning word is : " << word << std::endl;
     return word;
+}
+
+bool compTokens(const token & t1, const token & t2) {
+    return t1.sWord < t2.sWord;
+
 }
 
