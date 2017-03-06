@@ -34,3 +34,6 @@ Shakespeare/
 # Output Test File
 out
 *.txt
+
+# Stemmer File
+stemmer.cpp

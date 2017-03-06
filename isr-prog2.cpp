@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <algorithm>
+//#include "stemmer.cpp"
 
 // Custom structure that will store our unique tokens as well as the documents
 // that they are found in.
@@ -17,23 +18,27 @@ struct token {
     std::string sWord;              // Token
     std::vector <int> docList;      // Vector of all documents token is found in (dupes allowed)
     std::set <int> uniDocList;      // Set of all documents token is found in (dupes not allowed)
+    int uniSize;
 
     token(const std::string& x) : sWord(x) {}
 
     void addDocNum(int docNum) {
         docList.push_back(docNum);
         uniDocList.insert(docNum);
+        //this->updateUniSize();
     }
 
     friend bool operator< (const token &left, const token &right);
 
     std::string getWord() { return sWord; };
     std::set<int> getUniqueDocList() { return uniDocList; }
+    int getUniSize() { return uniDocList.size(); }
+    void updateUniSize() { uniSize = uniDocList.size(); }
 };
 
 
-void printFileCollection (std::vector <std::string> fCol);
-std::string removePunc (std::string word);
+void printFileCollection (std::vector <std::string> fCol, int biggestWord);
+std::vector<std::string> removePunc (std::string word);
 bool compTokensLess(const token & t1, const token & t2);
 bool compTokensLower(const token & t1, const std::string & t2);
 void printTokenVector(std::vector<token> tVector);
@@ -45,6 +50,7 @@ int main(int argc, char * argv[]) {
     std::vector<std::string> fileCollection;
     std::vector<token> tokenVec;
     std::set<token> tokenSet;
+    int biggestWord = 0;
 
     std::ifstream myFile;
 
@@ -67,59 +73,38 @@ int main(int argc, char * argv[]) {
         }
 
         std::string word;
+        std::string newWord;
 
         // Loop that pulls all words from a single file
         while (myFile >> word) {
-            //std::cout << "new input word is: " << word << std::endl;
+            std::vector<std::string> puncWords = removePunc(word);
 
-            // Create iterator to search through the words stored in the
-            // tokens stored in our Vector
-            //auto b = find_if(tokenVec.begin(), tokenVec.end(), [word](const token& temp) {return temp.sWord == word;});
-            auto b = std::lower_bound(tokenVec.begin(), tokenVec.end(), word, compTokensLower);
-            auto iVec = std::distance(tokenVec.begin(), b);
+            for (int i = 0; i < puncWords.size(); ++i) {
+                newWord = puncWords.at(i);
 
-            // If we've found a match, we just want to update the document
-            // lists for that word.
-            /*if(b != tokenVec.end()) {
-                auto iVec = std::distance(tokenVec.begin(), b);
-                tokenVec.at(iVec).addDocNum(i+1);
-            } else { // Otherwise, we need to create a new token and construct it with this document's number
-                token temp = token(word);
-                temp.addDocNum(i+1);
-                tokenVec.push_back(temp);
-                std::sort(tokenVec.begin(), tokenVec.end(), compTokensLess);
-                //printTokenVector(tokenVec);
-            } */
+                auto c = tokenSet.find(newWord);
 
-            // We should be able to use lower_bound because we're sorting the
-            // Vector anytime we put in a new item.
-            /*if(iVec == tokenVec.size()) {
-                //std::cout << "entered if statement\n";
-                std::cout << "Inserting token with word " << word << std::endl;
-                token temp = token(word);
-                temp.addDocNum(i+1);
-                tokenVec.push_back(temp);
-                //std::cout << "tokenVec size is : " << tokenVec.size() << std::endl;
-                std::sort(tokenVec.begin(), tokenVec.end(), compTokensLess);
-                std::cout << "Sorted tokenVec\n";
-                printTokenVector(tokenVec);
-            } else {
-                //std::cout << "entered else statement\n";
-                int iVec = std::distance(tokenVec.begin(), b);
-                tokenVec.at(iVec).addDocNum(i+1);
-            }*/
-            auto c = tokenSet.find(word);
+                if (newWord.size() > biggestWord) {
+                    biggestWord = word.size();
+                }
 
-            if(tokenSet.find(word) != tokenSet.end()) {
-                token temp = *c;
-                temp.addDocNum(i+1);
-                //printIntegerSet(temp.uniDocList);
-            } else {
-                token temp = token(word);
-                temp.addDocNum(i+1);
-                tokenSet.insert(temp);
-            }
-            //wordCollection.insert(word);
+            // Search through our set of tokens.  If we find that the token
+            // already exists in the set, let's add this document number to
+            // that structure.
+                if(tokenSet.find(newWord) != tokenSet.end()) {
+                    //std::cout << "Found existing token for: " << newWord << std::endl;
+                    token temp = *c;
+                    temp.addDocNum(i+1);
+                    temp.updateUniSize();
+                    //std::cout << "Token's unique size is: " << temp.getUniSize() << std::endl;
+                    //printIntegerSet(temp.uniDocList);
+                } else {
+                    token temp = token(newWord);
+                    temp.addDocNum(i+1);
+                    tokenSet.insert(temp);
+                }
+                //wordCollection.insert(word);
+            } //end for
         }
 
         myFile.close();
@@ -127,7 +112,7 @@ int main(int argc, char * argv[]) {
 
     std::cout << "Exited main loop.\n";
 
-    printFileCollection(fileCollection);
+    printFileCollection(fileCollection, biggestWord);
 
     /*for(int i = 0; i < tokenVec.size(); ++i) {
         std::cout << tokenVec.at(i).sWord << std::endl;
@@ -136,7 +121,13 @@ int main(int argc, char * argv[]) {
     std::set<token>::iterator iter;
     for(iter = tokenSet.begin(); iter != tokenSet.end(); ++iter) {
         token t = *iter;
-        std::cout << t.sWord << ": ";
+        //std::cout << "token from token set's size is: " << t.getUniSize() << std::endl;
+        std::cout << t.sWord;
+
+        for (int i = t.sWord.size() -1; i < biggestWord; ++i) {
+            std::cout << " ";
+        }
+
         printIntegerSet(t.uniDocList);
     }
 
@@ -145,46 +136,93 @@ int main(int argc, char * argv[]) {
 
 // Function takes in a vector containing all of the file names and prints them
 // to the console as the Legend
-void printFileCollection (std::vector< std::string > fCol) {
+void printFileCollection (std::vector< std::string > fCol, int biggestWord) {
 
     std::cout << "Legend:" << std::endl;
-    for (int i = 0; i < fCol.size(); ++i) {
+    for(int i = 0; i < fCol.size(); ++i) {
         std::cout << i + 1 << ". " << fCol.at(i) << std::endl;
     }
+
+    std::cout << "" << std::endl;
+
+    std::cout << "Word";
+    for(int i = 4; i < biggestWord; ++i) {
+        std::cout << " ";
+    }
+
+    std::cout << " Posting\n";
+
+    for(int i = 0; i < biggestWord; ++i) {
+        std::cout << "-";
+    }
+
+    std::cout << " ";
+
+    for(int i = 0; i < biggestWord; ++i) {
+        std::cout << "-";
+    }
+
+    std::cout << "" << std::endl;
 }
 
 // Function that takes in a word and removes all punctuation
-std::string removePunc (std::string word) {
-    //bool check = true;
+std::vector<std::string> removePunc (std::string word) {
+    //std::cout << "Entering removePunc\n";
 
     int iter = 0;
+    std::string retString;
+    std::vector<std::string> retSVec;
 
-    std::cout << "word is : " << word << " (size: " << word.size() << ")" << std::endl;
-    /*for(char c : word) {
-        //std::cout << c << std::endl;
-        if(c == '-') {
-            word.erase(iter);
-            //word.resize(word.size() - 1);
-        }
-        iter++;
-    }*/
+    //std::cout << "word is : " << word << " (size: " << word.size() << ")" << std::endl;
+    for(char c : word) {
+        //std::cout << "c is: " << c << std::endl;
 
-    for(int i = 0; i < word.size(); ++i) {
-        char c = word.at(i);
+        // If the letter is a puncuation
+        if(c == '!' || c == '?' || c == '-' || c == ',' || c == '\"' || c == ')' || c == '(' || c == ':'
+                || c == '.' || c == '&' || c == '%' || c == '[' || c == ']' || c == ';' ) {
+            // If the letter following the puctuation isn't white space (i.e
+            // not the end of the word, maybe it's two words put together
+            if (c+1 != ' ') {
+                // If not working with a blank string at this point (this
+                // would only happen if we had two punctations in a row,
+                // (i.e something like test!!test2), let's save our previous
+                // word into the return vector and clear it to make way for
+                // the next word
+                if (retString.size() != 0) {
+                    //std::cout << "Pushing " << retString << " back\n";
+                    retSVec.push_back(retString);
+                    retString.clear();
+                } else {
+                    // Do nothing, because retString had no data
+                }
+            // Else, the following spot was white space after punctuation, nothing more to do
+            } else {
+                //std::cout << "Did not push something back\n";
+            }
+        /*} else if (c == '\'') {
+            std::cout << "Entering \' land.\n";
+            if ( c-1 == 'n' && c+1 == 't') {
+                std::cout << "Entering n\'t land.\n";
+                retString.erase(retString.end(), retString.end());
+                std::cout << "retString after removal: " << retString << std::endl;
+                retSVec.push_back(retString);
+                retSVec.push_back("not");
+                return "test";
+            } */
+        } else {
+            retString.push_back(c);
+        } // end else
+    } //end for
 
-        if(c == '!') {
-            word.erase(i);
-            std::cout << "Removing letter at index " << i << std::endl;
-            std::cout << "New size is : " << word.size() << std::endl;
-        } else if (c == '-') {
-            word.erase(i);
-        }
+    if (retString.size() != 0) {
+        //std::cout << "Outside of for looping, pushing back " << retString << std::endl;
+        retSVec.push_back(retString);
     }
-    //check = false;
 
-    std::cout << "returning word is : " << word << std::endl;
-    return word;
-}
+    //std::cout << "Returning from removePunc with vector size of " << retSVec.size() << std::endl;
+
+    return retSVec;
+} // end removePunc
 
 // Function used to sort the vector of tokens alphabetically
 bool compTokensLess(const token & t1, const token & t2) {
@@ -206,15 +244,17 @@ void printTokenVector(std::vector<token> tVector) {
     std::cout << "\n";
 }
 
+// Function to take in a set of Integers (in this case, the list of documents
+// a token was found in) and then print them to the screen.
 void printIntegerSet(std::set<int> tSet) {
     std::set<int>::iterator iter;
 
-    std::cout << "size of (" << tSet.size() << ") ";
+    //std::cout << "size of (" << tSet.size() << ") ";
     for(iter = tSet.begin(); iter != tSet.end(); ++iter) {
         std::cout << *iter << " ";
     }
 
-    std::cout << "\n";
+    std::cout << "" << std::endl;
 }
 
 bool operator< (const token &left, const token &right) {
