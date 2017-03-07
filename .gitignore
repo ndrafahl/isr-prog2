@@ -32,11 +32,8 @@
 Shakespeare/
 
 # Output Test File
-out
+isr-prog2
 *.txt
-
-# Stemmer File
-stemmer.cpp
 
 #core
 core
