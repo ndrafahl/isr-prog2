@@ -25,7 +25,6 @@ struct token {
     void addDocNum(int docNum) {
         docList.push_back(docNum);
         uniDocList.insert(docNum);
-        //this->updateUniSize();
     }
 
     friend bool operator< (const token &left, const token &right);
@@ -43,7 +42,7 @@ bool compTokensLess(const token & t1, const token & t2);
 bool compTokensLower(const token & t1, const std::string & t2);
 void printTokenVector(std::vector<token> tVector);
 void printIntegerSet(std::set<int> tSet);
-extern int stem(char*, int, int);
+extern int stem(char* p, int i, int j);
 
 int main(int argc, char * argv[]) {
 
@@ -55,14 +54,14 @@ int main(int argc, char * argv[]) {
 
     std::ifstream myFile;
 
-    //std::string test = "Hello";
-    //int len = test.size();
-    //char *charArray = &test[0];
-    //int idx = stem(charArray, 0, len);
+    /*std::string test = "Hello";
+    int len = test.size();
+    char *charArray = &test[0];
+    int idx = stem(charArray, 0, len);
 
-    /*for(int i = 0; i < test.size(); ++i) {
+    for(int i = 0; i < test.size(); ++i) {
         std::cout << charArray[i];
-    }*/
+    } */
 
     // Print to CLI if the user didn't pass in any documents to parse
     if (argc <= 1) {
@@ -88,9 +87,18 @@ int main(int argc, char * argv[]) {
 
         // Loop that pulls all words from a single file
         while (myFile >> word) {
+            // Clear puncWords on new word
             puncWords.clear();
-            puncWords = removePunc(word);
 
+            // Call removePunc function on the word, return a vector of words
+            // that we will add into the postings list.
+            std::cout << "Calling removePunc from main.\n";
+            puncWords = removePunc(word);
+            std::cout << "Returned to main from removePunc\n";
+
+            // For each words that we've returned from removePunc, verify that
+            // the word isn't bigger than the biggest word.  We are going to
+            // then see if our set of tokens already contains that word
             for (unsigned int i = 0; i < puncWords.size(); ++i) {
                 newWord = puncWords.at(i);
 
@@ -102,7 +110,7 @@ int main(int argc, char * argv[]) {
 
             // Search through our set of tokens.  If we find that the token
             // already exists in the set, let's add this document number to
-            // that structure.
+            // that token's list of document numbers.
                 if(tokenSet.find(newWord) != tokenSet.end()) {
                     //std::cout << "Found existing token for: " << newWord << std::endl;
                     token temp = *c;
@@ -112,33 +120,36 @@ int main(int argc, char * argv[]) {
                     tokenSet.insert(temp);
                     //std::cout << "Token's unique size is: " << temp.getUniSize() << std::endl;
                     //printIntegerSet(temp.uniDocList);
+
+                // Otherwise, create a new token because we've never seen this
+                // word before
                 } else {
                     token temp = token(newWord);
                     temp.addDocNum(i+1);
                     tokenSet.insert(temp);
-                }
-                //wordCollection.insert(word);
-            } //end for
-        }
+                } //end if..else
+            } //end (unsigned int... (process words, add to token set)
+        } //end while(myFile... (pull words from file)
 
         myFile.close();
-    }
+    } //end for(int i... (read through documents)
 
     std::cout << "Exited main loop.\n";
 
-    printFileCollection(fileCollection, biggestWord);
+    printFileCollection(fileCollection, biggestWord); // Print Legend
 
+    // For each token in the set of tokens, loop through and print the word
+    // and the postings list for that word
     std::set<token>::iterator iter;
     for(iter = tokenSet.begin(); iter != tokenSet.end(); ++iter) {
         token t = *iter;
-        //std::cout << "token from token set's size is: " << t.getUniSize() << std::endl;
         std::cout << t.sWord;
 
         for (unsigned int i = t.sWord.size() -1; i < biggestWord; ++i) {
             std::cout << " ";
         }
 
-        printIntegerSet(t.uniDocList);
+        printIntegerSet(t.uniDocList); // Print document numbers for that token
     }
 
     return 0;
@@ -178,12 +189,12 @@ void printFileCollection (std::vector< std::string > fCol, int biggestWord) {
 
 // Function that takes in a word and removes all punctuation
 std::vector<std::string> removePunc (std::string word) {
-    //std::cout << "Entering removePunc\n";
+    std::cout << "Entering removePunc\n";
 
     std::string retString;
     std::vector<std::string> retSVec;
 
-    //std::cout << "word is : " << word << " (size: " << word.size() << ")" << std::endl;
+    std::cout << "word is : " << word << " (size: " << word.size() << ")" << std::endl;
     //for(char c : word) {
     for(unsigned int i = 0; i < word.size(); ++i) {
         //std::cout << "c is: " << c << std::endl;
@@ -204,7 +215,7 @@ std::vector<std::string> removePunc (std::string word) {
                 // word into the return vector and clear it to make way for
                 // the next word
                 if (retString.size() != 0) {
-                    //std::cout << "Pushing " << retString << " back\n";
+                    std::cout << "Pushing " << retString << " back\n";
                     retSVec.push_back(retString);
                     retString.clear();
                 } else {
@@ -233,12 +244,14 @@ std::vector<std::string> removePunc (std::string word) {
     // If we have some word leftover still in retString, that means there was
     // still one word that needs to be returned to main to be added into the
     // document collection
-    if (retString.size() != 0) {
-        //std::cout << "Outside of for looping, pushing back " << retString << std::endl;
+    if (retString.size() > 0) {
+        std::cout << "Outside of for looping, pushing back " << retString << std::endl;
         retSVec.push_back(retString);
+        std::cout << "Successfully pushed back: " << retString << std::endl;
     }
+    std::cout << "Passed through retString.size() != 0\n";
 
-    //std::cout << "Returning from removePunc with vector size of " << retSVec.size() << std::endl;
+    std::cout << "Returning from removePunc with vector size of " << retSVec.size() << "\n\n";
 
     return retSVec;
 } // end removePunc
