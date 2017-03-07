@@ -43,7 +43,7 @@ bool compTokensLess(const token & t1, const token & t2);
 bool compTokensLower(const token & t1, const std::string & t2);
 void printTokenVector(std::vector<token> tVector);
 void printIntegerSet(std::set<int> tSet);
-extern int stem(char * p, int i, int j);
+extern int stem(char*, int, int);
 
 int main(int argc, char * argv[]) {
 
@@ -51,16 +51,18 @@ int main(int argc, char * argv[]) {
     std::vector<std::string> fileCollection;
     std::vector<token> tokenVec;
     std::set<token> tokenSet;
-    int biggestWord = 0;
+    unsigned int biggestWord = 0;
 
     std::ifstream myFile;
 
-    std::string test = "Hello";
-    char *charArray = &test[0];
+    //std::string test = "Hello";
+    //int len = test.size();
+    //char *charArray = &test[0];
+    //int idx = stem(charArray, 0, len);
 
-    for(int i = 0; i < test.size(); ++i) {
+    /*for(int i = 0; i < test.size(); ++i) {
         std::cout << charArray[i];
-    }
+    }*/
 
     // Print to CLI if the user didn't pass in any documents to parse
     if (argc <= 1) {
@@ -89,7 +91,7 @@ int main(int argc, char * argv[]) {
             puncWords.clear();
             puncWords = removePunc(word);
 
-            for (int i = 0; i < puncWords.size(); ++i) {
+            for (unsigned int i = 0; i < puncWords.size(); ++i) {
                 newWord = puncWords.at(i);
 
                 std::set<token>::iterator c;
@@ -132,7 +134,7 @@ int main(int argc, char * argv[]) {
         //std::cout << "token from token set's size is: " << t.getUniSize() << std::endl;
         std::cout << t.sWord;
 
-        for (int i = t.sWord.size() -1; i < biggestWord; ++i) {
+        for (unsigned int i = t.sWord.size() -1; i < biggestWord; ++i) {
             std::cout << " ";
         }
 
@@ -147,7 +149,7 @@ int main(int argc, char * argv[]) {
 void printFileCollection (std::vector< std::string > fCol, int biggestWord) {
 
     std::cout << "Legend:" << std::endl;
-    for(int i = 0; i < fCol.size(); ++i) {
+    for(unsigned int i = 0; i < fCol.size(); ++i) {
         std::cout << i + 1 << ". " << fCol.at(i) << std::endl;
     }
 
@@ -178,20 +180,24 @@ void printFileCollection (std::vector< std::string > fCol, int biggestWord) {
 std::vector<std::string> removePunc (std::string word) {
     //std::cout << "Entering removePunc\n";
 
-    int iter = 0;
     std::string retString;
     std::vector<std::string> retSVec;
 
     //std::cout << "word is : " << word << " (size: " << word.size() << ")" << std::endl;
-    for(char c : word) {
+    //for(char c : word) {
+    for(unsigned int i = 0; i < word.size(); ++i) {
         //std::cout << "c is: " << c << std::endl;
 
         // If the letter is a puncuation
-        if(c == '!' || c == '?' || c == '-' || c == ',' || c == '\"' || c == ')' || c == '(' || c == ':'
-                || c == '.' || c == '&' || c == '%' || c == '[' || c == ']' || c == ';' ) {
+        /*if(c == '!' || c == '?' || c == '-' || c == ',' || c == '\"' || c == ')' || c == '(' || c == ':'
+                || c == '.' || c == '&' || c == '%' || c == '[' || c == ']' || c == ';' ) {*/
+        if(word[i] == '!' || word[i] == '?' || word[i] == '-' || word[i] == ',' || word [i] == '\"' || word[i] == ')'
+                || word[i] == '(' || word[i] == ':' || word[i] == '.' || word [i] == '&' || word[i] == '%'
+                || word[i] == '[' || word[i] == ']' || word[i] == ';' ) {
             // If the letter following the puctuation isn't white space (i.e
             // not the end of the word, maybe it's two words put together
-            if (c+1 != ' ') {
+            //if (c+1 != ' ') {
+            if(word[i+1] != ' ') {
                 // If not working with a blank string at this point (this
                 // would only happen if we had two punctations in a row,
                 // (i.e something like test!!test2), let's save our previous
@@ -219,7 +225,8 @@ std::vector<std::string> removePunc (std::string word) {
                 return "test";
             } */
         } else {
-            retString.push_back(c);
+            //retString.push_back(c);
+            retString.push_back(word[i]);
         } // end else
     } //end for
 
@@ -250,7 +257,7 @@ bool compTokensLower(const token & t1, const std::string & t2) {
 
 // Function to print the words stored currently in a vector of tokens
 void printTokenVector(std::vector<token> tVector) {
-    for(int i = 0; i < tVector.size(); ++i) {
+    for(unsigned int i = 0; i < tVector.size(); ++i) {
         std::cout << tVector.at(i).sWord << std::endl;
     }
     std::cout << "\n";
