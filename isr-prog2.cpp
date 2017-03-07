@@ -1,6 +1,7 @@
 //Author:     Nick Drafahl
 //Class:      Information Storage and Retrieval
 //Usage:      ./isr-prog2 <file1 [file2] ...>
+//Compile:    g++ -Wall -pedantic -ansi isr-prog2.cpp stemmer.o -o isr-prog2
 
 #include <set>
 #include <vector>
@@ -255,18 +256,6 @@ std::vector<std::string> removePunc (std::string word) {
 
     return retSVec;
 } // end removePunc
-
-// Function used to sort the vector of tokens alphabetically
-bool compTokensLess(const token & t1, const token & t2) {
-    return t1.sWord < t2.sWord;
-}
-
-bool compTokensLower(const token & t1, const std::string & t2) {
-    std::cout << "comparing token word " << t1.sWord << "<  input word " << t2;
-    if(t1.sWord < t2) { std::cout << " (true)\n";}
-    else {std::cout << " (false)\n";}
-    return t1.sWord < t2;
-}
 
 // Function to print the words stored currently in a vector of tokens
 void printTokenVector(std::vector<token> tVector) {
