@@ -37,3 +37,6 @@ out
 
 # Stemmer File
 stemmer.cpp
+
+#core
+core

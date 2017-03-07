@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <algorithm>
-//#include "stemmer.cpp"
+
 
 // Custom structure that will store our unique tokens as well as the documents
 // that they are found in.
@@ -36,13 +36,14 @@ struct token {
     void updateUniSize() { uniSize = uniDocList.size(); }
 };
 
-
+// Function Prototypes
 void printFileCollection (std::vector <std::string> fCol, int biggestWord);
 std::vector<std::string> removePunc (std::string word);
 bool compTokensLess(const token & t1, const token & t2);
 bool compTokensLower(const token & t1, const std::string & t2);
 void printTokenVector(std::vector<token> tVector);
 void printIntegerSet(std::set<int> tSet);
+extern int stem(char * p, int i, int j);
 
 int main(int argc, char * argv[]) {
 
@@ -53,6 +54,13 @@ int main(int argc, char * argv[]) {
     int biggestWord = 0;
 
     std::ifstream myFile;
+
+    std::string test = "Hello";
+    char *charArray = &test[0];
+
+    for(int i = 0; i < test.size(); ++i) {
+        std::cout << charArray[i];
+    }
 
     // Print to CLI if the user didn't pass in any documents to parse
     if (argc <= 1) {
@@ -74,15 +82,17 @@ int main(int argc, char * argv[]) {
 
         std::string word;
         std::string newWord;
+        std::vector<std::string> puncWords;
 
         // Loop that pulls all words from a single file
         while (myFile >> word) {
-            std::vector<std::string> puncWords = removePunc(word);
+            puncWords.clear();
+            puncWords = removePunc(word);
 
             for (int i = 0; i < puncWords.size(); ++i) {
                 newWord = puncWords.at(i);
 
-                auto c = tokenSet.find(newWord);
+                std::set<token>::iterator c;
 
                 if (newWord.size() > biggestWord) {
                     biggestWord = word.size();
@@ -96,6 +106,8 @@ int main(int argc, char * argv[]) {
                     token temp = *c;
                     temp.addDocNum(i+1);
                     temp.updateUniSize();
+                    tokenSet.erase(c);
+                    tokenSet.insert(temp);
                     //std::cout << "Token's unique size is: " << temp.getUniSize() << std::endl;
                     //printIntegerSet(temp.uniDocList);
                 } else {
@@ -113,10 +125,6 @@ int main(int argc, char * argv[]) {
     std::cout << "Exited main loop.\n";
 
     printFileCollection(fileCollection, biggestWord);
-
-    /*for(int i = 0; i < tokenVec.size(); ++i) {
-        std::cout << tokenVec.at(i).sWord << std::endl;
-    }*/
 
     std::set<token>::iterator iter;
     for(iter = tokenSet.begin(); iter != tokenSet.end(); ++iter) {
@@ -143,6 +151,7 @@ void printFileCollection (std::vector< std::string > fCol, int biggestWord) {
         std::cout << i + 1 << ". " << fCol.at(i) << std::endl;
     }
 
+    // Everything that follows is some magical way of formatting the Legend
     std::cout << "" << std::endl;
 
     std::cout << "Word";
@@ -214,6 +223,9 @@ std::vector<std::string> removePunc (std::string word) {
         } // end else
     } //end for
 
+    // If we have some word leftover still in retString, that means there was
+    // still one word that needs to be returned to main to be added into the
+    // document collection
     if (retString.size() != 0) {
         //std::cout << "Outside of for looping, pushing back " << retString << std::endl;
         retSVec.push_back(retString);
@@ -257,6 +269,7 @@ void printIntegerSet(std::set<int> tSet) {
     std::cout << "" << std::endl;
 }
 
+// overloading the < operator that allows putting our tokens into a set
 bool operator< (const token &left, const token &right) {
     return left.sWord < right.sWord;
 }
