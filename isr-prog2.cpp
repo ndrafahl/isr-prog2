@@ -100,8 +100,8 @@ int main(int argc, char * argv[]) {
             // For each words that we've returned from removePunc, verify that
             // the word isn't bigger than the biggest word.  We are going to
             // then see if our set of tokens already contains that word
-            for (unsigned int i = 0; i < puncWords.size(); ++i) {
-                newWord = puncWords.at(i);
+            for (unsigned int j = 0; j < puncWords.size(); ++j) {
+                newWord = puncWords.at(j);
 
                 std::set<token>::iterator c;
 
@@ -113,20 +113,16 @@ int main(int argc, char * argv[]) {
             // already exists in the set, let's add this document number to
             // that token's list of document numbers.
                 if(tokenSet.find(newWord) != tokenSet.end()) {
-                    //std::cout << "Found existing token for: " << newWord << std::endl;
                     token temp = *c;
-                    temp.addDocNum(i+1);
+                    temp.addDocNum(i);
                     temp.updateUniSize();
                     tokenSet.erase(c);
                     tokenSet.insert(temp);
-                    //std::cout << "Token's unique size is: " << temp.getUniSize() << std::endl;
-                    //printIntegerSet(temp.uniDocList);
-
                 // Otherwise, create a new token because we've never seen this
-                // word before
+                // token before
                 } else {
                     token temp = token(newWord);
-                    temp.addDocNum(i+1);
+                    temp.addDocNum(i);
                     tokenSet.insert(temp);
                 } //end if..else
             } //end (unsigned int... (process words, add to token set)
@@ -135,9 +131,8 @@ int main(int argc, char * argv[]) {
         myFile.close();
     } //end for(int i... (read through documents)
 
-    std::cout << "Exited main loop.\n";
-
-    printFileCollection(fileCollection, biggestWord); // Print Legend
+    // Print Legend
+    printFileCollection(fileCollection, biggestWord);
 
     // For each token in the set of tokens, loop through and print the word
     // and the postings list for that word
